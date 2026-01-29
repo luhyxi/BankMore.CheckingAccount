@@ -1,0 +1,7 @@
+﻿services:
+  bankmore.checkingaccount.web:
+    image: bankmore.checkingaccount.web
+    build:
+      context: .
+      dockerfile: BankMore.CheckingAccount.Web/Dockerfile
+
