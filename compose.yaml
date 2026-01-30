@@ -14,7 +14,7 @@ services:
       - Redis__ConnectionString=redis:6379
       - Kafka__BootstrapServers=kafka:9092
     volumes:
-      - checkingaccount-data:/data
+      - ./checkingaccount-data:/app/data
 
   redis:
     image: redis:7-alpine
@@ -53,4 +53,5 @@ services:
 volumes:
   redis-data:
   checkingaccount-data:
+    external: true
 
