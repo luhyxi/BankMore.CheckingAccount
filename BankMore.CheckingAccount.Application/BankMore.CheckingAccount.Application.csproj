@@ -1,3 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <Folder Include="ContaCorrente\Query\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BankMore.CheckingAccount.Domain\BankMore.CheckingAccount.Domain.csproj" />
+  </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Mediator.Abstractions" />
+  </ItemGroup>
 </Project>
