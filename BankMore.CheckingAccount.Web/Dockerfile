@@ -20,4 +20,8 @@ RUN dotnet publish "./BankMore.CheckingAccount.Web.csproj" -c $BUILD_CONFIGURATI
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+COPY BankMore.CheckingAccount.Web/contacorrente.db /data/contacorrente.db
+USER root
+RUN chmod 777 /data/contacorrente.db
+USER $APP_UID
 ENTRYPOINT ["dotnet", "BankMore.CheckingAccount.Web.dll"]

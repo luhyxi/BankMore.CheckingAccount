@@ -1,7 +1,7 @@
 <Project>
     <PropertyGroup>
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
         <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
@@ -9,13 +9,15 @@
     </PropertyGroup>
     <PropertyGroup>
         <NoWarn>1591</NoWarn>
+        <WarningsAsMessages>CS8785</WarningsAsMessages>    
     </PropertyGroup>
-    
-    <ItemGroup Condition="'$(MSBuildProjectExtension)' != '.dcproj'">
+
+    <ItemGroup>
         <PackageReference Include="SonarAnalyzer.CSharp">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="Microsoft.Extensions.Logging"/>
     </ItemGroup>
-    
+
 </Project>

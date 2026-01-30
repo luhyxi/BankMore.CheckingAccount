@@ -6,6 +6,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Directory.Packages.props = Directory.Packages.props
 		.gitignore = .gitignore
 		compose.yaml = compose.yaml
+		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{36F2725A-0E42-4EDC-A257-54C05BA6A1D9}"
@@ -24,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BankMore.CheckingAccount.Un
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BankMore.CheckingAccount.IntegrationTests", "BankMore.CheckingAccount.IntegrationTests\BankMore.CheckingAccount.IntegrationTests.csproj", "{48A952F5-D610-4880-B50E-78A29C12D93E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedKernel", "SharedKernel\SharedKernel.csproj", "{03ECD540-BF0F-4BDC-9176-BCCB9F9DDC63}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,6 +39,7 @@ Global
 		{950B754A-BEC7-4F8F-9FEE-929B0957EB36} = {36F2725A-0E42-4EDC-A257-54C05BA6A1D9}
 		{79B5F25D-B222-488B-BFD2-EC87C085C61D} = {120EAF56-D008-4BD0-918B-4AA998EA854B}
 		{48A952F5-D610-4880-B50E-78A29C12D93E} = {120EAF56-D008-4BD0-918B-4AA998EA854B}
+		{03ECD540-BF0F-4BDC-9176-BCCB9F9DDC63} = {36F2725A-0E42-4EDC-A257-54C05BA6A1D9}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{A1C38D18-FD09-4A22-AD83-EFFE7EC44D04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -62,5 +66,9 @@ Global
 		{48A952F5-D610-4880-B50E-78A29C12D93E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{48A952F5-D610-4880-B50E-78A29C12D93E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{48A952F5-D610-4880-B50E-78A29C12D93E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{03ECD540-BF0F-4BDC-9176-BCCB9F9DDC63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{03ECD540-BF0F-4BDC-9176-BCCB9F9DDC63}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{03ECD540-BF0F-4BDC-9176-BCCB9F9DDC63}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{03ECD540-BF0F-4BDC-9176-BCCB9F9DDC63}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
