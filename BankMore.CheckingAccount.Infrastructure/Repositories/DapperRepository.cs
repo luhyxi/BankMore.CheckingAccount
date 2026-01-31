@@ -17,7 +17,6 @@ public class DapperRepository<T> : IRepository<T> where T : class, IAggregateRoo
     private static readonly PropertyInfo KeyProperty = ResolveKeyProperty(Properties);
     private static readonly string KeyColumnName = GetColumnName(KeyProperty);
     private static readonly string SelectAllSql = BuildSelectAllSql();
-    private static readonly string SelectByIdSql = BuildSelectByIdSql();
     private static readonly string InsertSql = BuildInsertSql();
     private static readonly string UpdateSql = BuildUpdateSql();
     private static readonly string DeleteSql = BuildDeleteSql();
@@ -58,17 +57,37 @@ public class DapperRepository<T> : IRepository<T> where T : class, IAggregateRoo
         return results.ToArray();
     }
 
-    public async ValueTask<T> GetAsync(Guid id, CancellationToken cancellationToken = default)
+    public async ValueTask<T> GetAsync(string key, string column, CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(column)) throw new ArgumentException("Column must be provided.", nameof(column));
+
+        if (key is null) throw new ArgumentNullException(nameof(key));
+
+        var property = Properties.FirstOrDefault(p => string.Equals(p.Name, column, StringComparison.OrdinalIgnoreCase))
+            ?? Properties.FirstOrDefault(p => string.Equals(GetColumnName(p), column, StringComparison.OrdinalIgnoreCase));
+
+        if (property is null)
+        {
+            throw new ArgumentException(
+                $"Column '{column}' is not a mapped property/column for '{typeof(T).Name}'.",
+                nameof(column));
+        }
+
+        var dbColumnName = GetColumnName(property);
+        var parameterName = "value";
+        var sql = $"{SelectAllSql} WHERE {QuoteIdentifier(dbColumnName)} = @{parameterName}";
+
+        object? typedValue = ConvertStringToColumnType(key, property.PropertyType);
+
         using var connection = await OpenConnectionAsync(cancellationToken);
         var parameters = new DynamicParameters();
-        parameters.Add(KeyColumnName, id);
-        var command = new CommandDefinition(SelectByIdSql, parameters, cancellationToken: cancellationToken);
+        parameters.Add(parameterName, typedValue);
+
+        var command = new CommandDefinition(sql, parameters, cancellationToken: cancellationToken);
         var result = await connection.QuerySingleOrDefaultAsync<T>(command);
+
         if (result is null)
-        {
-            throw new KeyNotFoundException($"{typeof(T).Name} with id '{id}' was not found.");
-        }
+            throw new KeyNotFoundException($"{typeof(T).Name} with {column} '{key}' was not found.");
 
         return result;
     }
@@ -190,6 +209,31 @@ public class DapperRepository<T> : IRepository<T> where T : class, IAggregateRoo
         }
 
         return value;
+    }
+
+    private static object? ConvertStringToColumnType(string value, Type targetType)
+    {
+        var type = Nullable.GetUnderlyingType(targetType) ?? targetType;
+
+        if (type == typeof(string)) return value;
+
+        if (type == typeof(Guid))
+        {
+            if (Guid.TryParse(value, out var guid)) return guid;
+
+            throw new FormatException($"'{value}' is not a valid GUID.");
+        }
+
+        if (type.IsEnum) return Enum.Parse(type, value, ignoreCase: true);
+
+        try
+        {
+            return Convert.ChangeType(value, type);
+        }
+        catch (Exception ex)
+        {
+            throw new FormatException($"'{value}' could not be converted to {type.Name}.", ex);
+        }
     }
 
     private static string QuoteIdentifier(string identifier) => $"\"{identifier}\"";

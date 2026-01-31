@@ -1,3 +1,5 @@
+using BankMore.CheckingAccount.Application.Services;
+using BankMore.CheckingAccount.Domain.Interfaces;
 using BankMore.CheckingAccount.Infrastructure;
 
 namespace BankMore.CheckingAccount.Web.Configs;
@@ -8,21 +10,10 @@ public static class ServiceConfigs
   {
     services.AddInfrastructure(builder.Configuration, logger)
             .AddMediatorSourceGen(logger);
-
-    // if (builder.Environment.IsDevelopment())
-    // {
-    //   // Use a local test email server - configured in Aspire
-    //   // See: https://ardalis.com/configuring-a-local-test-email-server/
-    //   services.AddScoped<IEmailSender, MimeKitEmailSender>();
-    //
-    //   // Otherwise use this:
-    //   //builder.Services.AddScoped<IEmailSender, FakeEmailSender>();
-    // }
-    // else
-    // {
-    //   services.AddScoped<IEmailSender, MimeKitEmailSender>();
-    // }
-
+    services.AddScoped<IPasswordHashingService, PasswordHashingService>();
+    services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
+    services.AddScoped<IJwtService, JwtService>();
+    
     logger.LogInformation("services registered");
 
     return services;

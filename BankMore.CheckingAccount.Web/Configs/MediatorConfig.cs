@@ -1,4 +1,4 @@
-using BankMore.CheckingAccount.Application.ContaCorrente.Command.CreateContaCorrente;
+using BankMore.CheckingAccount.Application.ContaCorrente.Command.Create;
 using BankMore.CheckingAccount.Domain.ContaCorrenteAggregate;
 using BankMore.CheckingAccount.Infrastructure;
 
@@ -17,17 +17,8 @@ public static class MediatorConfig
 
       options.Assemblies =
       [
-        typeof(CreateContaCorrenteCommand),     // UseCases
+        typeof(CreateContaCorrenteCommand),
       ];
-
-      // Register pipeline behaviors here (order matters)
-      // options.PipelineBehaviors =
-      // [
-      //   typeof(LoggingBehavior<,>)
-      // ];
-
-      // If you have stream behaviors:
-      // options.StreamPipelineBehaviors = [ typeof(YourStreamBehavior<,>) ];
     });
 
     return services;

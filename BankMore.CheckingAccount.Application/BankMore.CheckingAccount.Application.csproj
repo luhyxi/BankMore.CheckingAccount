@@ -1,5 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <Folder Include="ContaCorrente\Command\Inativate\" />
     <Folder Include="ContaCorrente\Query\" />
   </ItemGroup>
   <ItemGroup>
@@ -8,5 +9,6 @@
 
   <ItemGroup>
     <PackageReference Include="Mediator.Abstractions" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
   </ItemGroup>
 </Project>

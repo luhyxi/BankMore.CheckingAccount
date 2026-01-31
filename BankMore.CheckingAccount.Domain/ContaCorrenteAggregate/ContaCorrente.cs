@@ -9,6 +9,9 @@ public class ContaCorrente : IAggregateRoot
 {
     [Column("idcontacorrente")]
     public ContaCorrenteId Id { get; private set; } = default!;
+    
+    [Column("cpf")]
+    public ContaCorrenteCpf Cpf{ get; private set; } = default!;
 
     [Column("numero")]
     public ContaCorrenteNumero Numero { get; private set; } = default!;
@@ -29,13 +32,17 @@ public class ContaCorrente : IAggregateRoot
         ContaCorrenteId id,
         ContaCorrenteNumero numero,
         ContaCorrenteNome nome,
+        ContaCorrenteCpf cpf,
         ContaCorrenteSenha senha,
+        string salt,
         bool ativo = true)
     {
         Id = id;
         Numero = numero;
         Nome = nome;
+        Cpf = cpf;
         Senha = senha;
+        Salt = salt;
         Ativo = ativo;
     }
 

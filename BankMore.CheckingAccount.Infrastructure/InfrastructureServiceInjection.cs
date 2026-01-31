@@ -1,5 +1,6 @@
 using BankMore.CheckingAccount.Infrastructure.Data;
 using BankMore.CheckingAccount.Infrastructure.Repositories;
+using BankMore.CheckingAccount.Domain.Interfaces;
 using SharedKernel;
 
 namespace BankMore.CheckingAccount.Infrastructure;
@@ -21,6 +22,7 @@ public static class InfrastructureServiceInjection
         services.Configure<DatabaseOptions>(databaseSection);
         services.AddScoped<IDbConnectionFactory, SqliteConnectionFactory>();
         
+        services.AddScoped<IContaCorrenteRepository, ContaCorrenteRepository>();
         services.AddScoped(typeof(IRepository<>), typeof(DapperRepository<>));
         
         return services;
