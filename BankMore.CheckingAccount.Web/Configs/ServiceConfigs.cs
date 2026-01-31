@@ -6,7 +6,7 @@ namespace BankMore.CheckingAccount.Web.Configs;
 
 public static class ServiceConfigs
 {
-  public static IServiceCollection AddServiceConfigs(this IServiceCollection services, Microsoft.Extensions.Logging.ILogger logger, WebApplicationBuilder builder)
+  public static IServiceCollection AddServiceConfigs(this IServiceCollection services, ILogger logger, WebApplicationBuilder builder)
   {
     services.AddInfrastructure(builder.Configuration, logger)
             .AddMediatorSourceGen(logger);

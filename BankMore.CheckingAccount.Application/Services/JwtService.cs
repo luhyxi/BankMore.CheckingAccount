@@ -31,7 +31,7 @@ public sealed class JwtService : IJwtService
 
         var claims = new List<Claim>
         {
-            new(JwtRegisteredClaimNames.Sub, conta.Id.Value.ToString()),
+            new("id", conta.Id.Value.ToString()),
             new(JwtRegisteredClaimNames.Name, conta.Nome.Value),
             new("numero", conta.Numero.Value)
         };

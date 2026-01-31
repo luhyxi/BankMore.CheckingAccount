@@ -1,6 +1,12 @@
+using System.Text;
+
 using BankMore.CheckingAccount.Infrastructure.Data;
 using BankMore.CheckingAccount.Infrastructure.Repositories;
 using BankMore.CheckingAccount.Domain.Interfaces;
+
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+
 using SharedKernel;
 
 namespace BankMore.CheckingAccount.Infrastructure;
@@ -18,6 +24,23 @@ public static class InfrastructureServiceInjection
         {
             logger.LogWarning("Database connection string is not configured.");
         }
+
+        services.AddAuthorization();
+
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                options.RequireHttpsMetadata = false;
+                options.SaveToken = true;
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    IssuerSigningKey =
+                        new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:SigningKey"])),
+                    ValidIssuer = configuration["Jwt:Issuer"],
+                    ValidAudience = configuration["Jwt:Audience"],
+                    ClockSkew = TimeSpan.Zero
+                };
+            });
 
         services.Configure<DatabaseOptions>(databaseSection);
         services.AddScoped<IDbConnectionFactory, SqliteConnectionFactory>();

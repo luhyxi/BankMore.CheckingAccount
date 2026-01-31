@@ -1,5 +1,3 @@
-using BankMore.CheckingAccount.Domain.ContaCorrenteAggregate;
-
 using SharedKernel;
 
 namespace BankMore.CheckingAccount.Application.ContaCorrente.Command.Create;

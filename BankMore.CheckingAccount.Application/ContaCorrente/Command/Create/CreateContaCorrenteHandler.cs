@@ -1,4 +1,3 @@
-using BankMore.CheckingAccount.Domain.ContaCorrenteAggregate;
 using BankMore.CheckingAccount.Domain.Interfaces;
 
 using ContaCorrenteModel = BankMore.CheckingAccount.Domain.ContaCorrenteAggregate.ContaCorrente;

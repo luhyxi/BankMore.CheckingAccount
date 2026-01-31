@@ -1,4 +1,6 @@
+using System.IdentityModel.Tokens.Jwt;
 using BankMore.CheckingAccount.Application.ContaCorrente.Command.Create;
+using BankMore.CheckingAccount.Application.ContaCorrente.Command.Inactivate;
 using BankMore.CheckingAccount.Application.ContaCorrente.Command.Login;
 using BankMore.CheckingAccount.Domain.ContaCorrenteAggregate;
 
@@ -57,7 +59,7 @@ public static class ContaCorrenteEndpoints
 
                     if (!result.IsSuccess) return Results.BadRequest(new { error = result.Error });
 
-                    return Results.Accepted($"/login/{result.Value}");
+                    return Results.Accepted($"/login/{result.Value}", result.Value);
                 }
                 catch (ArgumentException ex)
                 {
@@ -69,9 +71,49 @@ public static class ContaCorrenteEndpoints
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized)
             .WithOpenApi();
+
+        routes.MapPost("conta/inactivate",
+                async (
+                    [FromBody] InactivateContaCorrenteRequest request,
+                    HttpContext httpContext,
+                    IMediator mediator,
+                    CancellationToken cancellationToken) =>
+                {
+                    try
+                    {
+                        var subject = httpContext.User.FindFirst("id")?.Value;
+                        if (string.IsNullOrWhiteSpace(subject) || !Guid.TryParse(subject, out var contaId))
+                        {
+                            return Results.StatusCode(StatusCodes.Status403Forbidden);
+                        }
+
+                        var command = new InactivateContaCorrenteCommand(
+                            new ContaCorrenteId(contaId),
+                            new ContaCorrenteSenha(request.Senha));
+                        var result = await mediator.Send(command, cancellationToken);
+
+                        if (!result.IsSuccess)
+                        {
+                            return Results.BadRequest(new { error = result.Error });
+                        }
+
+                        return Results.NoContent();
+                    }
+                    catch (ArgumentException ex)
+                    {
+                        return Results.BadRequest(new { error = ex.Message });
+                    }
+                })
+            .WithName("InactivateContaCorrente")
+            .RequireAuthorization()
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status403Forbidden)
+            .WithOpenApi();
     }
 }
 
 public sealed record CreateContaCorrenteRequest(string Cpf, string Nome, string Senha);
 
 public sealed record LoginContaCorrenteRequest(bool isCpf, string Cpf, string Numero, string Senha); // need to make CPF and Numero nullable
+public sealed record InactivateContaCorrenteRequest(string Senha);

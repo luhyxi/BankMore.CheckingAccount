@@ -1,6 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-    <Folder Include="ContaCorrente\Command\Inativate\" />
     <Folder Include="ContaCorrente\Query\" />
   </ItemGroup>
   <ItemGroup>
