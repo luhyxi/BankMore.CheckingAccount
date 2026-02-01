@@ -46,6 +46,7 @@ public static class InfrastructureServiceInjection
         services.AddScoped<IDbConnectionFactory, SqliteConnectionFactory>();
         
         services.AddScoped<IContaCorrenteRepository, ContaCorrenteRepository>();
+        services.AddScoped<IIdempotenciaRepository, IdempotenciaRepository>();
         services.AddScoped(typeof(IRepository<>), typeof(DapperRepository<>));
         
         return services;

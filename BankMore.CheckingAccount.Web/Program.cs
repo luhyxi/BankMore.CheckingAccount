@@ -1,4 +1,3 @@
-using BankMore.CheckingAccount.Web;
 using BankMore.CheckingAccount.Web.Configs;
 using BankMore.CheckingAccount.Web.Endpoints;
 
@@ -27,5 +26,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapContaCorrenteEndpoints();
+app.MapTransactionEndpoints();
 
 app.Run();

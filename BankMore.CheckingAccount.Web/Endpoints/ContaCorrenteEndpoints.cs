@@ -1,4 +1,3 @@
-using System.IdentityModel.Tokens.Jwt;
 using BankMore.CheckingAccount.Application.ContaCorrente.Command.Create;
 using BankMore.CheckingAccount.Application.ContaCorrente.Command.Inactivate;
 using BankMore.CheckingAccount.Application.ContaCorrente.Command.Login;
@@ -42,7 +41,7 @@ public static class ContaCorrenteEndpoints
             .Produces(StatusCodes.Status400BadRequest)
             .WithOpenApi();
 
-        routes.MapPost("login",
+        routes.MapPost("conta/login",
             async (
                 [FromBody] LoginContaCorrenteRequest request,
                 IMediator mediator,

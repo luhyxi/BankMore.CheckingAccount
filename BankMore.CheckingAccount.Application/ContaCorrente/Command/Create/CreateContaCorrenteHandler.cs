@@ -1,5 +1,7 @@
 using BankMore.CheckingAccount.Domain.Interfaces;
 
+using Microsoft.Extensions.Logging;
+
 using ContaCorrenteModel = BankMore.CheckingAccount.Domain.ContaCorrenteAggregate.ContaCorrente;
 
 using SharedKernel;
@@ -8,7 +10,8 @@ namespace BankMore.CheckingAccount.Application.ContaCorrente.Command.Create;
 
 public sealed class CreateContaCorrenteHandler(
     IContaCorrenteRepository repository,
-    IPasswordHashingService passwordHashingService)
+    IPasswordHashingService passwordHashingService,
+    ILogger<CreateContaCorrenteHandler> logger)
     : ICommandHandler<CreateContaCorrenteCommand, IResult<Guid>>
 {
     public async ValueTask<IResult<Guid>> Handle(CreateContaCorrenteCommand command, CancellationToken cancellationToken)
@@ -27,10 +30,12 @@ public sealed class CreateContaCorrenteHandler(
 
             await repository.CreateAsync(conta, cancellationToken);
 
+            logger.LogInformation("Account {AccountId} created successfully", conta.Numero);
             return Result<Guid>.Success(id);
         }
         catch (ArgumentException ex)
         {
+            logger.LogInformation(ex, "Account of user named {Name} failed to be created", command.Nome);
             return Result<Guid>.Failure(ex.Message);
         }
     }

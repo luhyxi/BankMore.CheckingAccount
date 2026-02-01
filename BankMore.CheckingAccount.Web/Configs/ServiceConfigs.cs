@@ -1,5 +1,6 @@
 using BankMore.CheckingAccount.Application.Services;
 using BankMore.CheckingAccount.Domain.Interfaces;
+using BankMore.CheckingAccount.Domain.Services;
 using BankMore.CheckingAccount.Infrastructure;
 
 namespace BankMore.CheckingAccount.Web.Configs;
@@ -13,6 +14,7 @@ public static class ServiceConfigs
     services.AddScoped<IPasswordHashingService, PasswordHashingService>();
     services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
     services.AddScoped<IJwtService, JwtService>();
+    services.AddScoped<IIdempotenciaService, IdempotenciaService>();
     
     logger.LogInformation("services registered");
 

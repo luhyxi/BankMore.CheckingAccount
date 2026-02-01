@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <Folder Include="ContaCorrente\Query\" />
+    <Folder Include="Movimentacao\Command\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BankMore.CheckingAccount.Domain\BankMore.CheckingAccount.Domain.csproj" />

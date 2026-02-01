@@ -8,8 +8,7 @@
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
     <PropertyGroup>
-        <NoWarn>1591</NoWarn>
-        <WarningsAsMessages>CS8785</WarningsAsMessages>    
+      <NoWarn>$(NoWarn);1591;8785</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
