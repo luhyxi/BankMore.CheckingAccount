@@ -6,4 +6,4 @@ public sealed record CreateContaCorrenteCommand(
     ContaCorrenteCpf Cpf,
     ContaCorrenteNome Nome,
     string Senha)
-    : ICommand<IResult<Guid>>;
+    : ICommand<IResult<string>>;

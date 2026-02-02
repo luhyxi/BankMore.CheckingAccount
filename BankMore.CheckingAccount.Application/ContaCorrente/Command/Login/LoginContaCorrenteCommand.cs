@@ -6,7 +6,7 @@ namespace BankMore.CheckingAccount.Application.ContaCorrente.Command.Login;
 
 public sealed record LoginContaCorrenteCommand(
     bool IsCpf,
-    ContaCorrenteCpf cpf, 
-    ContaCorrenteNumero numero,
-    ContaCorrenteSenha senha)
+    ContaCorrenteSenha senha,
+    ContaCorrenteNumero? numero = null,
+    ContaCorrenteCpf? cpf = null)
     : ICommand<IResult<string>>;

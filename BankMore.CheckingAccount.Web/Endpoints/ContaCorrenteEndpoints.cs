@@ -28,19 +28,34 @@ public static class ContaCorrenteEndpoints
                             request.Senha);
                         var result = await mediator.Send(command, cancellationToken);
 
-                        if (!result.IsSuccess) return Results.BadRequest(new { error = result.Error });
+                        if (!result.IsSuccess)
+                        {
+                            var errorType = result.Error?.Contains("CPF", StringComparison.OrdinalIgnoreCase) == true ||
+                                          result.Error?.Contains("invalid", StringComparison.OrdinalIgnoreCase) == true
+                                ? "INVALID_DOCUMENT"
+                                : "INVALID_DATA";
+                            return Results.BadRequest(new ErrorResponse(result.Error ?? "Invalid request", errorType));
+                        }
 
-                        return Results.Created($"/conta/{result.Value}", new { id = result.Value });
+                        // Assuming result.Value contains the account number
+                        return Results.Created($"/conta/{result.Value}", new CreateAccountResponse(result.Value.ToString()));
                     }
                     catch (ArgumentException ex)
                     {
-                        return Results.BadRequest(new { error = ex.Message });
+                        return Results.BadRequest(new ErrorResponse(ex.Message, "INVALID_DOCUMENT"));
                     }
                 })
-            .WithName("CreateContaCorrente")
-            .Produces(StatusCodes.Status201Created)
-            .Produces(StatusCodes.Status400BadRequest)
-            .WithOpenApi();
+            .WithName("CreateCheckingAccount")
+            .WithDescription("Creates a new checking account")
+            .WithSummary("Create checking account")
+            .Produces<CreateAccountResponse>(StatusCodes.Status201Created)
+            .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
+            .WithOpenApi(operation =>
+            {
+                operation.Summary = "Create checking account";
+                operation.Description = "Creates a new checking account with CPF validation. Returns the account number on success.";
+                return operation;
+            });
 
         routes.MapPost("conta/login",
             async (
@@ -50,27 +65,50 @@ public static class ContaCorrenteEndpoints
             {
                 try
                 {
-                    var command = new LoginContaCorrenteCommand(
-                        request.isCpf,
-                        new ContaCorrenteCpf(request.Cpf),
-                        new ContaCorrenteNumero(request.Numero),
-                        new ContaCorrenteSenha(request.Senha));
+                    LoginContaCorrenteCommand command;
+                    if (request.isCpf)
+                    {
+                        command = new LoginContaCorrenteCommand(
+                            request.isCpf,
+                            new ContaCorrenteSenha(request.Senha),
+                            null,
+                            new ContaCorrenteCpf(request.Cpf));
+                    }
+                    else
+                    {
+                        command = new LoginContaCorrenteCommand(
+                            request.isCpf,
+                            new ContaCorrenteSenha(request.Senha),
+                            new ContaCorrenteNumero(request.Numero),
+                            null);
+                    }
                     var result = await mediator.Send(command, cancellationToken);
 
-                    if (!result.IsSuccess) return Results.BadRequest(new { error = result.Error });
+                    if (!result.IsSuccess)
+                    {
+                        return Results.Unauthorized();
+                    }
 
-                    return Results.Accepted($"/login/{result.Value}", result.Value);
+                    return Results.Ok(new LoginResponse(result.Value));
                 }
                 catch (ArgumentException ex)
                 {
-                    Console.WriteLine(ex);
-                    throw;
+                    return Results.Json(
+                        new ErrorResponse(ex.Message, "USER_UNAUTHORIZED"),
+                        statusCode: StatusCodes.Status401Unauthorized);
                 }
             })
             .WithName("Login")
-            .Produces(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status401Unauthorized)
-            .WithOpenApi();
+            .WithSummary("Authenticate user")
+            .WithDescription("Authenticates a user with account number or CPF and password. Returns a JWT token.")
+            .Produces<LoginResponse>(StatusCodes.Status200OK)
+            .Produces<ErrorResponse>(StatusCodes.Status401Unauthorized)
+            .WithOpenApi(operation =>
+            {
+                operation.Summary = "Login to checking account";
+                operation.Description = "Authenticates using account number or CPF with password. Returns a JWT token containing the checking account identification.";
+                return operation;
+            });
 
         routes.MapPost("conta/inactivate",
                 async (
@@ -84,7 +122,9 @@ public static class ContaCorrenteEndpoints
                         var subject = httpContext.User.FindFirst("id")?.Value;
                         if (string.IsNullOrWhiteSpace(subject) || !Guid.TryParse(subject, out var contaId))
                         {
-                            return Results.StatusCode(StatusCodes.Status403Forbidden);
+                            return Results.Json(
+                                new ErrorResponse("Invalid or expired token", "UNAUTHORIZED"),
+                                statusCode: StatusCodes.Status403Forbidden);
                         }
 
                         var command = new InactivateContaCorrenteCommand(
@@ -94,22 +134,36 @@ public static class ContaCorrenteEndpoints
 
                         if (!result.IsSuccess)
                         {
-                            return Results.BadRequest(new { error = result.Error });
+                            var errorType = result.Error?.Contains("not found", StringComparison.OrdinalIgnoreCase) == true
+                                ? "INVALID_ACCOUNT"
+                                : result.Error?.Contains("inactive", StringComparison.OrdinalIgnoreCase) == true
+                                    ? "INACTIVE_ACCOUNT"
+                                    : result.Error?.Contains("password", StringComparison.OrdinalIgnoreCase) == true
+                                        ? "INVALID_PASSWORD"
+                                        : "INVALID_DATA";
+                            return Results.BadRequest(new ErrorResponse(result.Error ?? "Invalid request", errorType));
                         }
 
                         return Results.NoContent();
                     }
                     catch (ArgumentException ex)
                     {
-                        return Results.BadRequest(new { error = ex.Message });
+                        return Results.BadRequest(new ErrorResponse(ex.Message, "INVALID_DATA"));
                     }
                 })
-            .WithName("InactivateContaCorrente")
+            .WithName("DeactivateCheckingAccount")
+            .WithSummary("Deactivate checking account")
+            .WithDescription("Deactivates a checking account after password validation")
             .RequireAuthorization()
             .Produces(StatusCodes.Status204NoContent)
-            .Produces(StatusCodes.Status400BadRequest)
-            .Produces(StatusCodes.Status403Forbidden)
-            .WithOpenApi();
+            .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
+            .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+            .WithOpenApi(operation =>
+            {
+                operation.Summary = "Deactivate checking account";
+                operation.Description = "Deactivates the authenticated user's checking account. Requires valid authentication token and password confirmation.";
+                return operation;
+            });
         
         routes.MapGet("conta/saldo",
             async (
@@ -120,13 +174,17 @@ public static class ContaCorrenteEndpoints
                 var isAuthenticated = httpContext.User.Identity?.IsAuthenticated == true;
                 if (!isAuthenticated)
                 {
-                    return Results.StatusCode(StatusCodes.Status403Forbidden);
+                    return Results.Json(
+                        new ErrorResponse("Invalid or expired token", "UNAUTHORIZED"),
+                        statusCode: StatusCodes.Status403Forbidden);
                 }
 
                 var subject = httpContext.User.FindFirst("id")?.Value;
                 if (string.IsNullOrWhiteSpace(subject) || !Guid.TryParse(subject, out var contaId))
                 {
-                    return Results.StatusCode(StatusCodes.Status403Forbidden);
+                    return Results.Json(
+                        new ErrorResponse("Invalid or expired token", "UNAUTHORIZED"),
+                        statusCode: StatusCodes.Status403Forbidden);
                 }
 
                 var query = new GetSaldoQuery(new ContaCorrenteId(contaId));
@@ -134,23 +192,39 @@ public static class ContaCorrenteEndpoints
 
                 if (!result.IsSuccess)
                 {
-                    var error = result.Error ?? "Failed to retrieve saldo.";
+                    var error = result.Error ?? "Failed to retrieve balance.";
                     var errorType = error.Contains("inactive", StringComparison.OrdinalIgnoreCase)
-                        ? "InactiveAccount"
-                        : error.Contains("was not found", StringComparison.OrdinalIgnoreCase)
-                            ? "AccountNotFound"
-                            : "InvalidData";
+                        ? "INACTIVE_ACCOUNT"
+                        : error.Contains("not found", StringComparison.OrdinalIgnoreCase)
+                            ? "INVALID_ACCOUNT"
+                            : "INVALID_DATA";
 
-                    return Results.BadRequest(new { error, type = errorType });
+                    return Results.BadRequest(new ErrorResponse(error, errorType));
                 }
 
-                return Results.Ok(result.Value);
+                // Map from SaldoResult to BalanceResponse
+                var saldoResult = result.Value;
+                var balanceResponse = new BalanceResponse(
+                    saldoResult.NumeroConta,
+                    saldoResult.NomeTitular,
+                    saldoResult.DataConsulta,
+                    saldoResult.SaldoAtual);
+
+                return Results.Ok(balanceResponse);
             })
-            .WithName("saldo")
-            .Produces(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status400BadRequest)
-            .Produces(StatusCodes.Status403Forbidden)
-            .WithOpenApi();
+            .WithName("GetBalance")
+            .WithSummary("Get account balance")
+            .WithDescription("Retrieves the current balance and account information")
+            .RequireAuthorization()
+            .Produces<BalanceResponse>(StatusCodes.Status200OK)
+            .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
+            .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+            .WithOpenApi(operation =>
+            {
+                operation.Summary = "Get checking account balance";
+                operation.Description = "Retrieves the current balance, account holder name, and balance inquiry timestamp for the authenticated user's checking account.";
+                return operation;
+            });
     }
 }
 
@@ -159,3 +233,12 @@ public sealed record CreateContaCorrenteRequest(string Cpf, string Nome, string 
 public sealed record LoginContaCorrenteRequest(bool isCpf, string Cpf, string Numero, string Senha); // need to make CPF and Numero nullable
 
 public sealed record InactivateContaCorrenteRequest(string Senha);
+
+public sealed record CreateAccountResponse(string AccountNumber);
+public sealed record LoginResponse(string Token);
+public sealed record ErrorResponse(string Message, string Type);
+public sealed record BalanceResponse(
+    string AccountNumber,
+    string AccountHolderName,
+    DateTime BalanceDateTime,
+    string CurrentBalance);

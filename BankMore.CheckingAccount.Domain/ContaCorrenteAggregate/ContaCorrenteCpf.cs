@@ -15,7 +15,7 @@ public class ContaCorrenteCpf : ValueObject
             throw new ArgumentException("Invalid CPF", value);
         }
 
-        Value = value;
+        Value = Regex.Replace(value, @"\D", "");
     }
     
     protected override IEnumerable<object?> GetAtomicValues()

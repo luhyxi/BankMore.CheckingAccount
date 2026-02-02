@@ -17,8 +17,8 @@ public class LoginContaCorrenteHandler(
         try
         {
             var conta = command.IsCpf
-                ? await repository.GetByCpfAsync(command.cpf, cancellationToken)
-                : await repository.GetByNumeroAsync(command.numero, cancellationToken);
+                ? await repository.GetByCpfAsync(command.cpf!, cancellationToken)
+                : await repository.GetByNumeroAsync(command.numero!, cancellationToken);
 
             if (!conta.Ativo)
             {

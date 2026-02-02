@@ -12,9 +12,9 @@ public sealed class CreateContaCorrenteHandler(
     IContaCorrenteRepository repository,
     IPasswordHashingService passwordHashingService,
     ILogger<CreateContaCorrenteHandler> logger)
-    : ICommandHandler<CreateContaCorrenteCommand, IResult<Guid>>
+    : ICommandHandler<CreateContaCorrenteCommand, IResult<string>>
 {
-    public async ValueTask<IResult<Guid>> Handle(CreateContaCorrenteCommand command, CancellationToken cancellationToken)
+    public async ValueTask<IResult<string>> Handle(CreateContaCorrenteCommand command, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
 
@@ -31,12 +31,12 @@ public sealed class CreateContaCorrenteHandler(
             await repository.CreateAsync(conta, cancellationToken);
 
             logger.LogInformation("Account {AccountId} created successfully", conta.Numero);
-            return Result<Guid>.Success(id);
+            return Result<string>.Success(numero.Value);
         }
         catch (ArgumentException ex)
         {
             logger.LogInformation(ex, "Account of user named {Name} failed to be created", command.Nome);
-            return Result<Guid>.Failure(ex.Message);
+            return Result<string>.Failure(ex.Message);
         }
     }
 }

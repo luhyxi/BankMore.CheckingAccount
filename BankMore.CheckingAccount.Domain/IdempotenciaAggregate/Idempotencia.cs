@@ -27,7 +27,7 @@ public sealed class Idempotencia : IAggregateRoot
     {
         return new Idempotencia(
             Guid.NewGuid(),
-            requisicao,
+            requisicao + DateTime.Now,
             IdempotenciaResult.None
         );
     }
