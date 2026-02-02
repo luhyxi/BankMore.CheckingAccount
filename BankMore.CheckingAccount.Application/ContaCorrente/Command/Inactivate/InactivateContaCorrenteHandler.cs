@@ -35,8 +35,7 @@ public class InactivateContaCorrenteHandler(
                 conta.Cpf,
                 conta.Senha,
                 conta.Salt,
-                false,
-                conta.Saldo);
+                false);
 
             await repository.UpdateAsync(updated, cancellationToken);
             

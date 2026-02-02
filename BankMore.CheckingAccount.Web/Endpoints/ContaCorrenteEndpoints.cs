@@ -1,6 +1,7 @@
 using BankMore.CheckingAccount.Application.ContaCorrente.Command.Create;
 using BankMore.CheckingAccount.Application.ContaCorrente.Command.Inactivate;
 using BankMore.CheckingAccount.Application.ContaCorrente.Command.Login;
+using BankMore.CheckingAccount.Application.ContaCorrente.Query.GetSaldo;
 using BankMore.CheckingAccount.Domain.ContaCorrenteAggregate;
 
 using Mediator;
@@ -109,10 +110,52 @@ public static class ContaCorrenteEndpoints
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status403Forbidden)
             .WithOpenApi();
+        
+        routes.MapGet("conta/saldo",
+            async (
+                HttpContext httpContext,
+                IMediator mediator,
+                CancellationToken cancellationToken) =>
+            {
+                var isAuthenticated = httpContext.User.Identity?.IsAuthenticated == true;
+                if (!isAuthenticated)
+                {
+                    return Results.StatusCode(StatusCodes.Status403Forbidden);
+                }
+
+                var subject = httpContext.User.FindFirst("id")?.Value;
+                if (string.IsNullOrWhiteSpace(subject) || !Guid.TryParse(subject, out var contaId))
+                {
+                    return Results.StatusCode(StatusCodes.Status403Forbidden);
+                }
+
+                var query = new GetSaldoQuery(new ContaCorrenteId(contaId));
+                var result = await mediator.Send(query, cancellationToken);
+
+                if (!result.IsSuccess)
+                {
+                    var error = result.Error ?? "Failed to retrieve saldo.";
+                    var errorType = error.Contains("inactive", StringComparison.OrdinalIgnoreCase)
+                        ? "InactiveAccount"
+                        : error.Contains("was not found", StringComparison.OrdinalIgnoreCase)
+                            ? "AccountNotFound"
+                            : "InvalidData";
+
+                    return Results.BadRequest(new { error, type = errorType });
+                }
+
+                return Results.Ok(result.Value);
+            })
+            .WithName("saldo")
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status403Forbidden)
+            .WithOpenApi();
     }
 }
 
 public sealed record CreateContaCorrenteRequest(string Cpf, string Nome, string Senha);
 
 public sealed record LoginContaCorrenteRequest(bool isCpf, string Cpf, string Numero, string Senha); // need to make CPF and Numero nullable
+
 public sealed record InactivateContaCorrenteRequest(string Senha);

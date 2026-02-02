@@ -18,7 +18,6 @@ public sealed class ContaCorrenteRepository : IContaCorrenteRepository
             idcontacorrente AS Id,
             numero AS Numero,
             nome AS Nome,
-            saldo AS Saldo,
             cpf AS Cpf,
             senha AS Senha,
             salt AS Salt,
@@ -31,7 +30,6 @@ public sealed class ContaCorrenteRepository : IContaCorrenteRepository
             idcontacorrente,
             numero,
             nome,
-            saldo,
             cpf,
             senha,
             salt,
@@ -41,7 +39,6 @@ public sealed class ContaCorrenteRepository : IContaCorrenteRepository
             @Id,
             @Numero,
             @Nome,
-            @Saldo,
             @Cpf,
             @Senha,
             @Salt,
@@ -55,7 +52,6 @@ public sealed class ContaCorrenteRepository : IContaCorrenteRepository
             numero = @Numero,
             nome = @Nome,
             cpf = @Cpf,
-            saldo = @Saldo,
             senha = @Senha,
             salt = @Salt,
             ativo = @Ativo
@@ -157,7 +153,6 @@ public sealed class ContaCorrenteRepository : IContaCorrenteRepository
             Nome = contaCorrente.Nome.Value,
             Cpf = contaCorrente.Cpf.Value,
             Senha = contaCorrente.Senha.Value,
-            Saldo = contaCorrente.Saldo,
             Salt = contaCorrente.Salt,
             Ativo = contaCorrente.Ativo
         };

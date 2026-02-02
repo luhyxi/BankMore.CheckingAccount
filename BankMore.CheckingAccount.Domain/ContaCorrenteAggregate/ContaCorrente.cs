@@ -3,7 +3,6 @@ using SharedKernel;
 
 namespace BankMore.CheckingAccount.Domain.ContaCorrenteAggregate;
 
-// Anotations are a temporary workaround before adding a mapper
 public class ContaCorrente : IAggregateRoot
 {
     public ContaCorrenteId Id { get; private set; } = default!;
@@ -14,8 +13,6 @@ public class ContaCorrente : IAggregateRoot
 
     public ContaCorrenteNome Nome { get; private set; } = default!;
     
-    public decimal Saldo { get; private set; } = default!;
-
     public ContaCorrenteSenha Senha { get; private set; } = default!;
 
     public string Salt { get; private set; } = string.Empty;
@@ -29,8 +26,7 @@ public class ContaCorrente : IAggregateRoot
         ContaCorrenteCpf cpf,
         ContaCorrenteSenha senha,
         string salt,
-        bool ativo = true,
-        decimal saldo = 0.0m)
+        bool ativo = true)
     {
         Id = id;
         Numero = numero;
@@ -38,7 +34,6 @@ public class ContaCorrente : IAggregateRoot
         Cpf = cpf;
         Senha = senha;
         Salt = salt;
-        Saldo = saldo;
         Ativo = ativo;
     }
 
