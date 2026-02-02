@@ -23,7 +23,6 @@ public static class TransactionEndpoints
                 {
                     try
                     {
-                        // Check authentication
                         var isAuthenticated = httpContext.User.Identity?.IsAuthenticated == true;
                         if (!isAuthenticated)
                         {
@@ -41,7 +40,6 @@ public static class TransactionEndpoints
                                 new TransactionErrorResponse("Account number must be provided.", "INVALID_ACCOUNT"));
                         }
 
-                        // Validate transaction type
                         var tipoMovimentoDomain = request.TipoMovimento switch
                         {
                             "C" or "c" => TipoMovimento.Credito,
@@ -55,14 +53,12 @@ public static class TransactionEndpoints
                                 new TransactionErrorResponse("Only 'C' (Credit) or 'D' (Debit) types are accepted.", "INVALID_TYPE"));
                         }
 
-                        // Validate that only credit type is accepted if account number is different from logged-in user
                         if (contaNumero != loggedInAccountNumber && tipoMovimentoDomain != TipoMovimento.Credito)
                         {
                             return Results.BadRequest(
                                 new TransactionErrorResponse("Only credit transactions are allowed for other accounts.", "INVALID_TYPE"));
                         }
 
-                        // Validate positive value
                         if (request.Valor <= 0)
                         {
                             return Results.BadRequest(

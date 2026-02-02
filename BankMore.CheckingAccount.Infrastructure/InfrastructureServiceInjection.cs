@@ -43,6 +43,7 @@ public static class InfrastructureServiceInjection
             });
 
         services.Configure<DatabaseOptions>(databaseSection);
+        services.Configure<RedisCacheOptions>(configuration.GetSection("Redis"));
         services.AddScoped<IDbConnectionFactory, SqliteConnectionFactory>();
         
         services.AddScoped<IContaCorrenteRepository, ContaCorrenteRepository>();

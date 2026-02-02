@@ -20,10 +20,7 @@ public sealed class GetSaldoHandler(
         {
             var conta = await contaCorrenteRepository.GetByIdAsync(query.ContaCorrenteId, cancellationToken);
 
-            if (!conta.Ativo)
-            {
-                return Result<SaldoResult>.Failure("Conta corrente is inactive.");
-            }
+            if (!conta.Ativo) return Result<SaldoResult>.Failure("Conta corrente is inactive.");
 
             var saldo = await movimentoRepository.GetSaldoAsync(conta.Id, cancellationToken);
             var response = new SaldoResult(

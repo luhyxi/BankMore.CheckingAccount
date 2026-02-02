@@ -4,7 +4,6 @@ CREATE TABLE contacorrente (
 	numero TEXT(10) NOT NULL UNIQUE, -- numero da conta corrente
 	cpf TEXT(11) NOT NULL UNIQUE, -- cpf da conta corrente
 	nome TEXT(100) NOT NULL, -- nome do titular da conta corrente
-	saldo TEXT(100), -- saldo da conta corrente
 	ativo INTEGER(1) NOT NULL default 0, -- indicativo se a conta esta ativa. (0 = inativa, 1 = ativa).
 	senha TEXT(100) NOT NULL,
 	salt TEXT(100) NOT NULL,
