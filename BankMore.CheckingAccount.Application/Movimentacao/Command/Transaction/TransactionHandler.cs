@@ -9,12 +9,13 @@ namespace BankMore.CheckingAccount.Application.Movimentacao.Command.Transaction;
 public sealed class TransactionHandler(
     IContaCorrenteRepository contaCorrenteRepository,
     IIdempotenciaService idempotenciaService,
+    IMovimentoRepository movimentoRepository,
     ILogger<TransactionHandler> logger)
     : ICommandHandler<TransactionCommand, IResult<string>>
 {
     public async ValueTask<IResult<string>> Handle(TransactionCommand command, CancellationToken cancellationToken)
     {
-        if (!CommandParamsIsValid(command, out string? result))
+        if (!CommandParamsIsValid(command, out string? result)) 
             return Result<string>.Failure(result!);
 
         try
@@ -31,6 +32,15 @@ public sealed class TransactionHandler(
             if (hashExistsResult.Value)
                 return Result<string>.Failure("Duplicate transaction request.");
 
+            await movimentoRepository.CreateAsync(
+                    new Movimento(
+                        new MovimentoId(Guid.NewGuid()),
+                        conta.Id,
+                        DateTime.UtcNow,
+                        command.Tipo,
+                        command.Valor),
+                    cancellationToken);
+            
             var saveResult = await idempotenciaService.SaveIdempotencia(command.Idempotencia);
             if (!saveResult.IsSuccess)
                 return Result<string>.Failure(saveResult.Error ?? "Failed to save idempotency request.");

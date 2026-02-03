@@ -3,11 +3,10 @@ using System.Globalization;
 
 using BankMore.CheckingAccount.Domain.ContaCorrenteAggregate;
 using BankMore.CheckingAccount.Domain.Interfaces;
+using BankMore.CheckingAccount.Domain.MovimentoAggregate;
 using BankMore.CheckingAccount.Infrastructure.Data;
 
 using Dapper;
-
-using Microsoft.Extensions.Options;
 
 using StackExchange.Redis;
 
@@ -22,6 +21,45 @@ public sealed class MovimentoRepository(
     private readonly IDatabase _redis = redisContext.Database;
     private readonly TimeSpan _saldoCacheTtl = GetSaldoCacheTtl(cacheOptions.Value);
 
+    private const string InsertSql = """
+        INSERT INTO movimento(
+            idmovimento,
+            idcontacorrente,
+            datamovimento,
+            tipomovimento,
+            valor
+        )
+        VALUES (
+            @IdMovimento,
+            @IdContaCorrente,
+            @DataMovimento,
+            @TipoMovimento,
+            @Valor
+        )
+        """;
+    
+    private const string CalculateAccountBalanceSql= """
+        SELECT
+            COALESCE(SUM(
+                CASE tipomovimento
+                    WHEN 'C' THEN valor
+                    WHEN 'D' THEN -valor
+                    ELSE 0
+                END
+            ), 0)
+        FROM movimento
+        WHERE idcontacorrente = @Id
+        """;
+    public async ValueTask CreateAsync(
+        Movimento movimento, 
+        CancellationToken cancellationToken = default)
+    {
+        using var connection = await OpenConnectionAsync(cancellationToken);
+        var parameters = BuildParameters(movimento);
+        var command = new CommandDefinition(InsertSql, parameters, cancellationToken: cancellationToken);
+        await connection.ExecuteAsync(command);
+    }
+    
     public async ValueTask<decimal> GetSaldoAsync(
         ContaCorrenteId id,
         CancellationToken cancellationToken = default)
@@ -36,22 +74,9 @@ public sealed class MovimentoRepository(
                 CultureInfo.InvariantCulture);
         }
 
-        const string sql = """
-                           SELECT
-                               COALESCE(SUM(
-                                   CASE tipomovimento
-                                       WHEN 'C' THEN valor
-                                       WHEN 'D' THEN -valor
-                                       ELSE 0
-                                   END
-                               ), 0)
-                           FROM movimento
-                           WHERE idcontacorrente = @Id
-                           """;
-
         using var connection = await OpenConnectionAsync(cancellationToken);
         var command = new CommandDefinition(
-            sql,
+            CalculateAccountBalanceSql,
             new { Id = id.Value },
             cancellationToken: cancellationToken);
 
@@ -65,6 +90,22 @@ public sealed class MovimentoRepository(
         return saldo;
     }
 
+    private static object BuildParameters(Movimento movimento)
+    {
+        return new
+        {
+            IdMovimento = movimento.MovimentoId.Value,
+            IdContaCorrente = movimento.ContaCorrenteId.Value,
+            DataMovimento = movimento.DataMovimento.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+            TipoMovimento = movimento.TipoMovimento switch
+            {
+                TipoMovimento.Credito => "C",
+                TipoMovimento.Debito => "D",
+                _ => throw new ArgumentOutOfRangeException(nameof(movimento), "Invalid movimento type.")
+            },
+            Valor = movimento.Valor
+        };
+    }
     private static string GetSaldoCacheKey(ContaCorrenteId id)
         => $"saldo:{id.Value}";
 

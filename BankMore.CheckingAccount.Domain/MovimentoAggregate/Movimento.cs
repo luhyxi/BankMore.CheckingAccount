@@ -8,17 +8,19 @@ public class Movimento
         MovimentoId movimentoId,
         ContaCorrenteId  contaCorrenteId,
         DateTime dataMovimento,
-        TipoMovimento tipoMovimento)
+        TipoMovimento tipoMovimento,
+        decimal valor)
     {
         MovimentoId = movimentoId;
         ContaCorrenteId = contaCorrenteId;
         DataMovimento = dataMovimento;
         TipoMovimento = tipoMovimento;
+        Valor =  valor;
     }
 
     public MovimentoId MovimentoId{ get;}
     public ContaCorrenteId ContaCorrenteId{ get;}
     public DateTime DataMovimento { get; }
     public TipoMovimento TipoMovimento { get; }
-    public decimal Valor { get; } // Remove primitive 
+    public decimal Valor { get; }
 }

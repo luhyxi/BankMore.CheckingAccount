@@ -2,6 +2,7 @@ using BankMore.CheckingAccount.Application.ContaCorrente.Command.Create;
 using BankMore.CheckingAccount.Application.ContaCorrente.Command.Inactivate;
 using BankMore.CheckingAccount.Application.ContaCorrente.Command.Login;
 using BankMore.CheckingAccount.Application.ContaCorrente.Query.GetSaldo;
+using BankMore.CheckingAccount.Application.ContaCorrente.Query.GetIdByNumero;
 using BankMore.CheckingAccount.Domain.ContaCorrenteAggregate;
 
 using Mediator;
@@ -225,6 +226,57 @@ public static class ContaCorrenteEndpoints
                 operation.Description = "Retrieves the current balance, account holder name, and balance inquiry timestamp for the authenticated user's checking account.";
                 return operation;
             });
+
+        routes.MapGet("conta/id/{accountNumber}",
+            async (
+                [FromRoute] string accountNumber,
+                HttpContext httpContext,
+                IMediator mediator,
+                CancellationToken cancellationToken) =>
+            {
+                try
+                {
+                    var subject = httpContext.User.FindFirst("id")?.Value;
+                    if (string.IsNullOrWhiteSpace(subject) || !Guid.TryParse(subject, out var contaId))
+                    {
+                        return Results.Json(
+                            new ErrorResponse("Invalid or expired token", "UNAUTHORIZED"),
+                            statusCode: StatusCodes.Status403Forbidden);
+                    }
+                    
+                    var query = new GetIdByNumeroQuery(new ContaCorrenteNumero(accountNumber));
+                    var result = await mediator.Send(query, cancellationToken);
+
+                    if (!result.IsSuccess)
+                    {
+                        var error = result.Error ?? "Failed to retrieve account ID.";
+                        var errorType = error.Contains("not found", StringComparison.OrdinalIgnoreCase)
+                            ? "ACCOUNT_NOT_FOUND"
+                            : "INVALID_DATA";
+
+                        return Results.BadRequest(new ErrorResponse(error, errorType));
+                    }
+
+                    return Results.Ok(new AccountIdResponse(result.Value));
+                }
+                catch (ArgumentException ex)
+                {
+                    return Results.BadRequest(new ErrorResponse(ex.Message, "INVALID_ACCOUNT_NUMBER"));
+                }
+            })
+            .WithName("GetAccountId")
+            .WithSummary("Get account UUID by account number")
+            .WithDescription("Retrieves the UUID of an account by its account number")
+            .RequireAuthorization()
+            .Produces<AccountIdResponse>(StatusCodes.Status200OK)
+            .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
+            .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+            .WithOpenApi(operation =>
+            {
+                operation.Summary = "Get account UUID";
+                operation.Description = "Retrieves the UUID identifier for a checking account using its account number.";
+                return operation;
+            });
     }
 }
 
@@ -242,3 +294,4 @@ public sealed record BalanceResponse(
     string AccountHolderName,
     DateTime BalanceDateTime,
     string CurrentBalance);
+public sealed record AccountIdResponse(Guid Id);
