@@ -14,6 +14,8 @@ public sealed class CreateContaCorrenteHandler(
     ILogger<CreateContaCorrenteHandler> logger)
     : ICommandHandler<CreateContaCorrenteCommand, IResult<string>>
 {
+    private const int MaxNumeroGenerationAttempts = 5;
+
     public async ValueTask<IResult<string>> Handle(CreateContaCorrenteCommand command, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
@@ -22,16 +24,26 @@ public sealed class CreateContaCorrenteHandler(
         {
             var cpf = command.Cpf;
             var id = Guid.NewGuid();
-            var numero = ContaCorrenteNumero.Create(); // TODO: Tem que checar a existencia desse numero na DB
             var nome = command.Nome;
             var senha = passwordHashingService.Hash(command.Senha, out var salt);
 
-            var conta = new ContaCorrenteModel(new ContaCorrenteId(id), numero, nome, cpf, senha, salt);
+            for (var attempt = 1; attempt <= MaxNumeroGenerationAttempts; attempt++)
+            {
+                var numero = ContaCorrenteNumero.Create();
+                if (await repository.ExistsByNumeroAsync(numero, cancellationToken))
+                {
+                    logger.LogWarning("Duplicate account number generated; retrying (attempt {Attempt})", attempt);
+                    continue;
+                }
 
-            await repository.CreateAsync(conta, cancellationToken);
+                var conta = new ContaCorrenteModel(new ContaCorrenteId(id), numero, nome, cpf, senha, salt);
+                await repository.CreateAsync(conta, cancellationToken);
 
-            logger.LogInformation("Account {AccountId} created successfully", conta.Numero);
-            return Result<string>.Success(numero.Value);
+                logger.LogInformation("Account {AccountId} created successfully", conta.Numero);
+                return Result<string>.Success(numero.Value);
+            }
+
+            return Result<string>.Failure("Unable to generate a unique account number. Please try again.");
         }
         catch (ArgumentException ex)
         {

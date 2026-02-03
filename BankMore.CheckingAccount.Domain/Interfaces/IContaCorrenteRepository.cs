@@ -14,6 +14,8 @@ public interface IContaCorrenteRepository
 
     ValueTask<ContaCorrente> GetByNumeroAsync(ContaCorrenteNumero numero, CancellationToken cancellationToken = default);
 
+    ValueTask<bool> ExistsByNumeroAsync(ContaCorrenteNumero numero, CancellationToken cancellationToken = default);
+
     ValueTask UpdateAsync(ContaCorrente contaCorrente, CancellationToken cancellationToken = default);
 
     ValueTask DeleteAsync(ContaCorrenteId id, CancellationToken cancellationToken = default);

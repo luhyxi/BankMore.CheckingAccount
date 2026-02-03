@@ -116,6 +116,15 @@ public sealed class ContaCorrenteRepository : IContaCorrenteRepository
             : Map(result);
     }
 
+    public async ValueTask<bool> ExistsByNumeroAsync(ContaCorrenteNumero numero, CancellationToken cancellationToken = default)
+    {
+        using var connection = await OpenConnectionAsync(cancellationToken);
+        const string sql = "SELECT 1 FROM contacorrente WHERE numero = @Numero LIMIT 1";
+        var command = new CommandDefinition(sql, new { Numero = numero.Value }, cancellationToken: cancellationToken);
+        var result = await connection.QuerySingleOrDefaultAsync<int?>(command);
+        return result.HasValue;
+    }
+
     public async ValueTask UpdateAsync(ContaCorrente contaCorrente, CancellationToken cancellationToken = default)
     {
         using var connection = await OpenConnectionAsync(cancellationToken);
